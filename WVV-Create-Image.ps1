@@ -84,7 +84,7 @@ $VirtualMachine = Set-AzVMOSDisk -VM $VirtualMachine -ManagedDiskId $disk.Id -Cr
 # Create a public IP for the VM
 $publicIp = New-AzPublicIpAddress -Name ($VirtualMachineName.ToLower() + '_ip') -ResourceGroupName $virtualMachineResourceGroup  -Location $snapshot.Location -AllocationMethod Dynamic -Force
 # Create NIC in the first subnet of the virtual network
-$nic = New-AzNetworkInterface -Name ($VirtualMachineName.ToLower() + '_nic') -ResourceGroupName $resourceGroupName -Location $snapshot.Location -SubnetId $virtualNetworkName -PublicIpAddressId $publicIp.Id -Force
+$nic = New-AzNetworkInterface -Name ($VirtualMachineName.ToLower() + '_nic') -ResourceGroupName $resourceGroupName -Location $snapshot.Location -SubnetId $virtualNetworkSubnet -PublicIpAddressId $publicIp.Id -Force
 $VirtualMachine = Add-AzVMNetworkInterface -VM $VirtualMachine -Id $nic.Id
 
 #Create the virtual machine with Managed Disk

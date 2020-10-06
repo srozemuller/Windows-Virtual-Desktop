@@ -12,6 +12,26 @@ function test-VMstatus($virtualMachineName) {
     return "$virtualMachineName status " + (($vmstatus.Statuses | ? { $_.code -match 'Powerstate' }).DisplayStatus)
 }
 
+function add-firewallRule($NSG, $localPublicIp, $port) {
+    # Pick random number for setting priority. It will exclude current priorities.
+    $InputRange = 100..200
+    $Exclude = ($NSG | Get-AzNetworkSecurityRuleConfig | select Priority).priority
+    $RandomRange = $InputRange | Where-Object { $Exclude -notcontains $_ }
+    $priority = Get-Random -InputObject $RandomRange
+    $nsgParameters = @{
+        Name                     = "Allow-$port-Inbound-$localPublicIp"
+        Description              = "Allow port $port from local ip address $localPublicIp"
+        Access                   = 'Allow'
+        Protocol                 = "Tcp" 
+        Direction                = "Inbound" 
+        Priority                 = $priority 
+        SourceAddressPrefix      = $localPublicIp 
+        SourcePortRange          = "*"
+        DestinationAddressPrefix = "*" 
+        DestinationPortRange     = $port
+    }
+    $NSG | Add-AzNetworkSecurityRuleConfig @NSGParameters  | Set-AzNetworkSecurityGroup 
+}
 # Stopping VM for creating clean snapshot
 Stop-AzVM -name $virtualMachineName -resourcegroup $resourceGroupName -Force -StayProvisioned
 

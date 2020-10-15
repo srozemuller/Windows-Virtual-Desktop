@@ -1,7 +1,9 @@
 param(
     [parameter(mandatory = $true, ValueFromPipelineByPropertyName)]$virtualMachineName,
     [parameter(mandatory = $true, ValueFromPipelineByPropertyName)]$resourceGroupName,
-    [parameter(mandatory = $true, ValueFromPipelineByPropertyName)]$hostpoolName
+    [parameter(mandatory = $true, ValueFromPipelineByPropertyName)]$hostpoolName,
+    [parameter(mandatory = $true, ValueFromPipelineByPropertyName)]$password,
+    [parameter(mandatory = $true, ValueFromPipelineByPropertyName)]$username
 )
 import-module az.compute
 $date = get-date -format "yyyy-MM-dd"
@@ -69,6 +71,8 @@ Invoke-AzVMRunCommand -CommandId "EnableRemotePS" -VM $vm
 add-firewallRule -NSG $NSG -localPublicIp $localPublicIp -port 5986
 $connectionUri = "https://" + $virtualMachinePublicIp + ":5986" 
 $session = $null
+[securestring]$secStringPassword = ConvertTo-SecureString $password -AsPlainText -Force
+[pscredential]$creds = New-Object System.Management.Automation.PSCredential ($userName, $secStringPassword)
 while (!($session)) {
     $session = New-PSSession -ConnectionUri $connectionUri -Credential $creds -SessionOption (New-PSSessionOption -SkipCACheck -SkipCNCheck -SkipRevocationCheck)
     Write-Output "Creating Remote Powershell session"

@@ -13,6 +13,13 @@ function test-VMstatus($virtualMachineName) {
     $vmStatus = Get-AzVM -name $virtualMachineName -resourcegroup $resourceGroupName -Status
     return "$virtualMachineName status " + (($vmstatus.Statuses | ? { $_.code -match 'Powerstate' }).DisplayStatus)
 }
+function add-TagsToResource($resourceId,$hostpoolName,$imageVersion){
+    $tags = @{
+        ImageVersion = $imageVersion
+        HostPool     = $hostpoolName
+    }
+    Update-AzTag -ResourceId $resourceId -Tag $tags -Operation Merge
+}
 
 function add-firewallRule($NSG, $localPublicIp, $port) {
     # Pick random number for setting priority. It will exclude current priorities.
@@ -49,6 +56,9 @@ $snapshotName = ($vm.StorageProfile.OsDisk.name).Split("-")
 $snapshotName = $snapshotName[0] + "-" + $snapshotName[1] + "-" + $date + "-BS"
 Write-Output "Creating snapshot $snapshotName for $virtualMachineName"
 $createSnapshot = New-AzSnapshot -Snapshot $snapshot -SnapshotName $snapshotName -ResourceGroupName $resourceGroupName 
+# At last set some tags at the snapshot so you know on which image version this snapshot is based
+add-TagsToResource -resourceId $createSnapshot.Id -hostpoolName $hostpoolName -imageVersion $version
+
 
 #Source: https://docs.microsoft.com/nl-nl/azure/virtual-machines/windows/capture-image-resource
 # If snapshot is created start VM again and run a sysprep

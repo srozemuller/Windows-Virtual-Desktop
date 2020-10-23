@@ -2,8 +2,7 @@ param(
     [parameter(mandatory = $true)][string]$hostpoolName,
     [parameter(mandatory = $false)][int]$sessionHostsNumber,
     [parameter(mandatory = $true)][string]$administratorAccountUsername,
-    [parameter(mandatory = $true)][securestring]$administratorAccountPassword,
-    [parameter(mandatory = $true)][boolean]$setDrainModeToOn
+    [parameter(mandatory = $true)][string]$administratorAccountPassword
 )
 
 import-module az.desktopvirtualization
@@ -22,20 +21,29 @@ function create-wvdHostpoolToken($hostpoolName, $resourceGroup, $hostpoolSubscri
     return $registered
 }
 
+$hostpoolName = "WVD-Experts-Hostpool-Norm"
 # Get the hostpool information
 $hostpool = Get-AzWvdHostPool | ? { $_.Name -eq $hostpoolName }
+Write-Host "Found hostpool $($hostpool).name"
 $resourceGroup = ($hostpool).id.split("/")[4].ToUpper()
+Write-Host "Found resourcegroup $resourceGroup"
 $hostpoolSubscription = ($hostpool).id.split("/")[2]
+Write-Host "Found subscription $hostpoolSubscription"
 # Get current sessionhost information
 $sessionHosts = Get-AzWvdSessionHost -ResourceGroupName $resourceGroup -HostPoolName $hostpool.name
+Write-Host "Sessionhosts $sessionHosts"
+$sessionHost = $sessionHosts[-1]
+Write-Host "Last sessionhost is $sessionhost" 
+
 
 if ($null -eq $sessionHosts) {
     Write-Host "No sessionhosts found in hostpool $hostpoolname, exiting script"
     exit;
 }
 
-if (create-wvdHostpoolToken -hostpoolName $hostpoolName -resourceGroup $resourceGroup -hostpoolSubscription $hostpoolSubscription) {
-    $hostPoolToken = (ConvertTo-SecureString -AsPlainText -Force ($hostPoolToken).Token)
+$hostPoolRegistration = create-wvdHostpoolToken -hostpoolName $hostpoolName -resourceGroup $resourceGroup -hostpoolSubscription $hostpoolSubscription
+if ($hostPoolRegistration) {
+    $hostPoolToken = (ConvertTo-SecureString -AsPlainText -Force ($hostPoolRegistration).Token)
 }
 
 if ($null -eq $sessionHostsNumber) {
@@ -44,10 +52,10 @@ if ($null -eq $sessionHostsNumber) {
 }
 
 # Get current sessionhost configuration, used in the next steps
-$existingHostName = $sessionHosts[-1].ResourceId.Split("/")[-1]
+$existingHostName = $sessionHosts[-1].Id.Split("/")[-1]
 $prefix = $existingHostName.Split("-")[0]
-$currentVmInfo = Get-AzVM -name $existingHostName
-$vmInitialNumber = ([int]$existingHostName.Split("-")[-1]) + 1
+$currentVmInfo = Get-AzVM -Name $existingHostName.Split(".")[0]
+$vmInitialNumber = [int]$existingHostName.Split("-")[-1].Split(".")[0] + 1
 $vmNetworkInformation = (Get-AzNetworkInterface -ResourceId $currentVmInfo.NetworkProfile.NetworkInterfaces.id)
 $virtualNetworkName = $vmNetworkInformation.IpConfigurations.subnet.id.split("/")[-3]
 $virutalNetworkResoureGroup = $vmNetworkInformation.IpConfigurations.subnet.id.split("/")[4]
@@ -70,7 +78,7 @@ $templateParameters = @{
     resourceGroupName               = $resourceGroup
     hostpoolName                    = $hostpoolName
     administratorAccountUsername    = $administratorAccountUsername
-    administratorAccountPassword    = (ConvertTo-SecureString $administratorAccountPassword -AsPlainText -Force)
+    administratorAccountPassword    = $administratorAccountPassword #(ConvertTo-SecureString $administratorAccountPassword -AsPlainText -Force)
     createAvailabilitySet           = $false
     hostpooltoken                   = $hostPoolToken
     vmInitialNumber                 = $vmInitialNumber
@@ -95,10 +103,10 @@ $templateParameters = @{
     virtualMachineTags              = $tags
     imageTags                       = $tags
 }
-
+$templateParameters
 
 $deploy = new-AzresourcegroupDeployment -TemplateUri "https://raw.githubusercontent.com/srozemuller/Windows-Virtual-Desktop/master/Image%20Management/deploy-sessionhost-template.json" @templateParameters -Name "deploy-version-$($latestImageVersion.Name)"
-if (($deploy.ProvisioningState -eq "Succeeded") -and ($setDrainModeToOn)) {
+if (($deploy.ProvisioningState -eq "Succeeded")) {
     foreach ($sessionHost in $sessionHosts) {
         $sessionHostName = $sessionHost.name.Split("/")[-1]
         $sessionHostName

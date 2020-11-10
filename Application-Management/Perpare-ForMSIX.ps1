@@ -25,4 +25,4 @@ foreach ($task in $tasks) {
 Get-Service wuauserv | Set-Service -StartupType Disabled
 # Enable Hyper-V because you'll be using the Mount-VHD command to stage and and Dismount-VHD to destage
 Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V -All -NoRestart
-Restart-Computer $env:computername
+Restart-Computer $env:computername -Force

@@ -40,7 +40,7 @@ function create-randomString($type) {
         return $username
     }
     if ($type -eq 'password') {
-        $password = Get-RandomCharacters -length 5 -characters 'abcdefghiklmnoprstuvwxyz'
+        $password = Get-RandomCharacters -length 9 -characters 'abcdefghiklmnoprstuvwxyz'
         $password += Get-RandomCharacters -length 1 -characters 'ABCDEFGHKLMNOPRSTUVWXYZ'
         $password += Get-RandomCharacters -length 1 -characters '1234567890'
         $password += Get-RandomCharacters -length 1 -characters '!$%&/()=?}][{@#*+'

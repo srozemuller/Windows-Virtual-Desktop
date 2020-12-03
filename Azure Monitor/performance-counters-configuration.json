@@ -55,6 +55,21 @@
                     "Name": "All Memory percent Committed Bytes In Use"
                 }
             ]
+        },
+        {
+            "Process": []
+        },
+        {
+            "Processor Information": []
+        },
+        {
+            "Terminal Services": []
+        },
+        {
+            "User Input Delay per Process": []
+        },
+        {
+            "RemoteFX Network": []
         }
     ]
 }

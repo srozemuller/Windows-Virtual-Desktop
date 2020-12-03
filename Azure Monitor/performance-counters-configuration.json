@@ -1,0 +1,60 @@
+{
+    "PerformanceCounters": [
+        {
+            "LogicalDisk": [
+                {
+                    "InstanceName": "C:",
+                    "CounterName": "Avg. Disk Queue Length",
+                    "IntervalSeconds": 60,
+                    "Name": "C Avg. Disk Queue Length"
+                },
+                {
+                    "InstanceName": "C:",
+                    "CounterName": "% Free Space",
+                    "IntervalSeconds": 60,
+                    "Name": "C percent free space"
+                },
+                {
+                    "InstanceName": "C:",
+                    "CounterName": "Avg. Disk sec/Transfer,",
+                    "IntervalSeconds": 60,
+                    "Name": "C Avg. Disk sec/Transfer,"
+                },
+                {
+                    "InstanceName": "C:",
+                    "CounterName": "Current Disk Queue Length",
+                    "IntervalSeconds": 60,
+                    "Name": "C Current Disk Queue Length"
+                }
+            ]
+        },
+        {
+            "Memory": [
+                {
+                    "InstanceName": "*",
+                    "CounterName": "Available Mbytes",
+                    "IntervalSeconds": 60,
+                    "Name": "All Memory Available MBytes"
+                },
+                {
+                    "InstanceName": "*",
+                    "CounterName": "Page Faults/sec",
+                    "IntervalSeconds": 60,
+                    "Name": "All Memory Page Faults/sec"
+                },
+                {
+                    "InstanceName": "*",
+                    "CounterName": "Pages/sec",
+                    "IntervalSeconds": 60,
+                    "Name": "All Memory Pages/sec"
+                },
+                {
+                    "InstanceName": "*",
+                    "CounterName": "% Committed Bytes In Use",
+                    "IntervalSeconds": 60,
+                    "Name": "All Memory percent Committed Bytes In Use"
+                }
+            ]
+        }
+    ]
+}

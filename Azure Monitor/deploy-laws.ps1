@@ -8,9 +8,12 @@ param(
 )
 Import-Module Az.OperationalInsights
 
-if ($null -eq $WorkspaceName){
-Write-Host "No Log Analytics Workspace name provided, creating new Workspace"
-$WorkspaceName = "log-analytics-wvd-"+ (Get-Random -Maximum 99999) # workspace names need to be unique across all Azure subscriptions - Get-Random helps with this for the example code
+if ($null -eq $WorkspaceName) {
+    Write-Host "No Log Analytics Workspace name provided, creating new Workspace"
+    $WorkspaceName = "log-analytics-wvd-" + (Get-Random -Maximum 99999) # workspace names need to be unique across all Azure subscriptions - Get-Random helps with this for the example code
+
+    # Create the workspace
+    New-AzOperationalInsightsWorkspace -Location $Location -Name $WorkspaceName -Sku Standard -ResourceGroupName $ResourceGroup
 }
 Write-Host "Created workspace $WorkspaceName"
 
@@ -31,22 +34,10 @@ function Get-CorrectEventLevels($EventLevels) {
 }
 # A slash (/) is not allowed in an object name, converting it if needed.
 function Make-NameAzureFriendly($Name) {
-    if (($Counter.name).Contains("/") ) { $name =$Counter.name.Replace("/", "-") }
+    if (($Counter.name).Contains("/") ) { $name = $Counter.name.Replace("/", "-") }
     else { $name = $Counter.name }
     return $name
 }
-
-# Create the resource group if needed
-try {
-    Get-AzResourceGroup -Name $ResourceGroup -ErrorAction Stop
-}
-catch {
-    New-AzResourceGroup -Name $ResourceGroup -Location $Location
-}
-
-# Create the workspace
-New-AzOperationalInsightsWorkspace -Location $Location -Name $WorkspaceName -Sku Standard -ResourceGroupName $ResourceGroup
-
 
 If ($EventsTemplate) {
     foreach ($WindowsEventLog in $WindowsEvents.WindowsEvent.EventLogNames) {

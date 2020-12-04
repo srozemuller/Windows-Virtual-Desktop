@@ -1,7 +1,8 @@
 {
-    "PerformanceCounters": [
+    "WindowsPerformanceCounter": [
         {
-            "LogicalDisk": [
+            "Object": "LogicalDisk",
+            "Counters" : [
                 {
                     "InstanceName": "C:",
                     "CounterName": "Avg. Disk Queue Length",
@@ -29,7 +30,8 @@
             ]
         },
         {
-            "Memory": [
+            "Object": "Memory",
+            "Counters": [
                 {
                     "InstanceName": "*",
                     "CounterName": "Available Mbytes",
@@ -57,7 +59,8 @@
             ]
         },
         {
-            "PhysicalDisk": [
+           "Object": "PhysicalDisk",
+           "Counters": [
                 {
                     "InstanceName": "*",
                     "CounterName": "Avg. Disk Queue Length",
@@ -85,7 +88,8 @@
             ]
         },
         {
-            "Process": [
+           "Object": "Process",
+           "Counters": [
                 {
                     "InstanceName": "*",
                     "CounterName": "% User Time",
@@ -119,7 +123,8 @@
             ]
         },
         {
-            "Processor Information": [
+            "Object":"Processor Information",
+            "Counters": [
                 {
                     "InstanceName": "_Total",
                     "CounterName": "% Processor Time",
@@ -129,7 +134,8 @@
             ]
         },
         {
-            "Terminal Services": [
+            "Object":"Terminal Services",
+            "Counters": [
                 {
                     "InstanceName": "*",
                     "CounterName": "Active Sessions",
@@ -151,7 +157,8 @@
             ]
         },
         {
-            "User Input Delay per Process": [
+            "Object":"User Input Delay per Process",
+            "Counters": [
                 {
                     "InstanceName": "*",
                     "CounterName": "Max Input Delay",
@@ -161,7 +168,8 @@
             ]
         },
         {
-            "User Input Delay per Session": [
+            "Object":"User Input Delay per Session",
+            "Counters": [
                 {
                     "InstanceName": "*",
                     "CounterName": "Max Input Delay",
@@ -171,7 +179,8 @@
             ]
         },
         {
-            "RemoteFX Network": [
+            "Object":"RemoteFX Network",
+            "Counters": [
                 {
                     "InstanceName": "*",
                     "CounterName": "Current TCP RTT",
@@ -180,7 +189,7 @@
                 },
                 {
                     "InstanceName": "*",
-                    "CounterName": "Current Current UDP Bandwidth",
+                    "CounterName": "Current UDP Bandwidth",
                     "IntervalSeconds": 60,
                     "Name": "All RemoteFX Network Current UDP Bandwidth"
                 }

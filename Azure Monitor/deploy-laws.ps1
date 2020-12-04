@@ -47,16 +47,6 @@ catch {
 # Create the workspace
 New-AzOperationalInsightsWorkspace -Location $Location -Name $WorkspaceName -Sku Standard -ResourceGroupName $ResourceGroup
 
-# Create the resource group if needed
-try {
-    Get-AzResourceGroup -Name $ResourceGroup -ErrorAction Stop
-}
-catch {
-    New-AzResourceGroup -Name $ResourceGroup -Location $Location
-}
-
-# Create the workspace
-New-AzOperationalInsightsWorkspace -Location $Location -Name $WorkspaceName -Sku Standard -ResourceGroupName $ResourceGroup
 
 If ($EventsTemplate) {
     foreach ($WindowsEventLog in $WindowsEvents.WindowsEvent.EventLogNames) {

@@ -29,6 +29,12 @@ function Get-CorrectEventLevels($EventLevels) {
     }
     $eventLevels
 }
+# A slash (/) is not allowed in an object name, converting it if needed.
+function Make-NameAzureFriendly($Name) {
+    if (($Counter.name).Contains("/") ) { $name =$Counter.name.Replace("/", "-") }
+    else { $name = $Counter.name }
+    return $name
+}
 
 # Create the resource group if needed
 try {
@@ -55,10 +61,9 @@ New-AzOperationalInsightsWorkspace -Location $Location -Name $WorkspaceName -Sku
 If ($EventsTemplate) {
     foreach ($WindowsEventLog in $WindowsEvents.WindowsEvent.EventLogNames) {
         $Level = Get-CorrectEventLevels -EventLevels $WindowsEventLog.EventTypes
-        if (($WindowsEventLog.Value).Contains("/") ) { $name = $WindowsEventLog.Value.Replace("/", "-") }
-        else { $name = $WindowsEventLog.Value }
+        $Name = Make-NameAzureFriendly -Name $WindowsEventLog.Value
         # Windows Event
-        New-AzOperationalInsightsWindowsEventDataSource -ResourceGroupName $ResourceGroup -WorkspaceName $WorkspaceName -EventLogName $WindowsEventLog.Value -Name $name @Level -Confirm:$false
+        New-AzOperationalInsightsWindowsEventDataSource -ResourceGroupName $ResourceGroup -WorkspaceName $WorkspaceName -EventLogName $WindowsEventLog.Value -Name $Name @Level
     }
 }
 
@@ -66,8 +71,7 @@ If ($CountersTemplate) {
     foreach ($CounterObject in $PerformanceCounters.WindowsPerformanceCounter) {
         $CounterObject
         foreach ($Counter in $CounterObject.Counters) {
-            if (($Counter.name).Contains("/") ) { $name =$Counter.name.Replace("/", "-") }
-            else { $name = $Counter.name }
+            $Name = Make-NameAzureFriendly -Name $Counter.name
             $Parameters = @{
                 ObjectName      = $CounterObject.Object
                 InstanceName    = $Counter.InstanceName

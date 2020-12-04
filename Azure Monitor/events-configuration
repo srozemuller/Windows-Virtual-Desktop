@@ -1,36 +1,51 @@
 {
-    "Events": [
+    "WindowsEvent": [
         {
-            "EventLevels": [
+            "EventLogNames": [
                 {
-                    "Value": "Informational",
-                    "LogLocation": [
-                        "Microsoft-Windows-TerminalServices-RemoteConnectionManager/Admin",
-                        "Microsoft-Windows-TerminalServices-LocalSessionManager/Operational",
-                        "Microsoft-FSLogix-Apps/Operational",
-                        "Microsoft-FSLogix-Apps/Admin"
+                    "Value": "Microsoft-Windows-TerminalServices-RemoteConnectionManager/Admin",
+                    "EventTypes": [
+                        "Information",
+                        "Warning",
+                        "Error"
                     ]
                 },
                 {
-                    "Value": "Warning",
-                    "LogLocation": [
-                        "Microsoft-Windows-TerminalServices-RemoteConnectionManager/Admin",
-                        "Microsoft-Windows-TerminalServices-LocalSessionManager/Operational",
-                        "Microsoft-FSLogix-Apps/Operational",
-                        "Microsoft-FSLogix-Apps/Admin",
-                        "System",
-                        "Application"
+                    "Value": "Microsoft-Windows-TerminalServices-LocalSessionManager/Operational",
+                    "EventTypes": [
+                        "Information",
+                        "Warning",
+                        "Error"
                     ]
                 },
                 {
-                    "Value": "Error",
-                    "LogLocation": [
-                        "Microsoft-Windows-TerminalServices-RemoteConnectionManager/Admin",
-                        "Microsoft-Windows-TerminalServices-LocalSessionManager/Operational",
-                        "Microsoft-FSLogix-Apps/Operational",
-                        "Microsoft-FSLogix-Apps/Admin",
-                        "System",
-                        "Application"
+                    "Value": "Microsoft-FSLogix-Apps/Operational",
+                    "EventTypes": [
+                        "Information",
+                        "Warning",
+                        "Error"
+                    ]
+                },
+                {
+                    "Value": "Microsoft-FSLogix-Apps/Admin",
+                    "EventTypes": [
+                        "Information",
+                        "Warning",
+                        "Error"
+                    ]
+                },
+                {
+                    "Value": "System",
+                    "EventTypes": [
+                        "Warning",
+                        "Error"
+                    ]
+                },
+                {
+                    "Value": "Application",
+                    "EventTypes": [
+                        "Warning",
+                        "Error"
                     ]
                 }
             ]

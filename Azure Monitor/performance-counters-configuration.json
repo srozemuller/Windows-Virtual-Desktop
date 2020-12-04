@@ -57,19 +57,134 @@
             ]
         },
         {
-            "Process": []
+            "PhysicalDisk": [
+                {
+                    "InstanceName": "*",
+                    "CounterName": "Avg. Disk Queue Length",
+                    "IntervalSeconds": 60,
+                    "Name": "All Physical Avg. Disk Queue Length"
+                },
+                {
+                    "InstanceName": "*",
+                    "CounterName": "Avg. Disk sec/Read",
+                    "IntervalSeconds": 60,
+                    "Name": "All Physical Avg. Disk sec/Read"
+                },
+                {
+                    "InstanceName": "*",
+                    "CounterName": "Avg. Disk sec/Transfer",
+                    "IntervalSeconds": 60,
+                    "Name": "All Physical Avg. Disk sec/Transfer"
+                },
+                {
+                    "InstanceName": "*",
+                    "CounterName": "Avg. Disk sec/Write",
+                    "IntervalSeconds": 60,
+                    "Name": "All Physical Avg. Disk sec/Write"
+                }
+            ]
         },
         {
-            "Processor Information": []
+            "Process": [
+                {
+                    "InstanceName": "*",
+                    "CounterName": "% User Time",
+                    "IntervalSeconds": 60,
+                    "Name": "All Process Percent User Time"
+                },
+                {
+                    "InstanceName": "*",
+                    "CounterName": "Thread Count",
+                    "IntervalSeconds": 60,
+                    "Name": "All Process Thread Count"
+                },
+                {
+                    "InstanceName": "*",
+                    "CounterName": "% Processor Time",
+                    "IntervalSeconds": 60,
+                    "Name": "All Process Percent Processor Time"
+                },
+                {
+                    "InstanceName": "*",
+                    "CounterName": "IO Write Operations/sec",
+                    "IntervalSeconds": 60,
+                    "Name": "All Process IO Write Operations/sec"
+                },
+                {
+                    "InstanceName": "*",
+                    "CounterName": "IO Read Operations/sec",
+                    "IntervalSeconds": 60,
+                    "Name": "All Process IO Read Operations/sec"
+                }
+            ]
         },
         {
-            "Terminal Services": []
+            "Processor Information": [
+                {
+                    "InstanceName": "_Total",
+                    "CounterName": "% Processor Time",
+                    "IntervalSeconds": 60,
+                    "Name": "Total Processor Percent Processor Time"
+                } 
+            ]
         },
         {
-            "User Input Delay per Process": []
+            "Terminal Services": [
+                {
+                    "InstanceName": "*",
+                    "CounterName": "Active Sessions",
+                    "IntervalSeconds": 60,
+                    "Name": "All TerminalServices Active Sessions"
+                },
+                {
+                    "InstanceName": "*",
+                    "CounterName": "Inactive Sessions",
+                    "IntervalSeconds": 60,
+                    "Name": "All TerminalServices Inactive Sessions"
+                },
+                {
+                    "InstanceName": "*",
+                    "CounterName": "Total Sessions",
+                    "IntervalSeconds": 60,
+                    "Name": "All TerminalServices Total Sessions"
+                }
+            ]
         },
         {
-            "RemoteFX Network": []
+            "User Input Delay per Process": [
+                {
+                    "InstanceName": "*",
+                    "CounterName": "Max Input Delay",
+                    "IntervalSeconds": 60,
+                    "Name": "All Input Delay Process Max Input Delay"
+                }
+            ]
+        },
+        {
+            "User Input Delay per Session": [
+                {
+                    "InstanceName": "*",
+                    "CounterName": "Max Input Delay",
+                    "IntervalSeconds": 60,
+                    "Name": "All Input Delay Session Max Input Delay"
+                }
+            ]
+        },
+        {
+            "RemoteFX Network": [
+                {
+                    "InstanceName": "*",
+                    "CounterName": "Current TCP RTT",
+                    "IntervalSeconds": 60,
+                    "Name": "All RemoteFX Network Current TCP RTT"
+                },
+                {
+                    "InstanceName": "*",
+                    "CounterName": "Current Current UDP Bandwidth",
+                    "IntervalSeconds": 60,
+                    "Name": "All RemoteFX Network Current UDP Bandwidth"
+                }
+            ]
         }
     ]
 }

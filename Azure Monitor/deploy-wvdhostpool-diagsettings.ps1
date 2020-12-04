@@ -35,7 +35,7 @@ $Parameters = @{
 Set-AzDiagnosticSetting -Name WVD-Diagnostics @parameters
 #endregion
 
-# region install Log Analytics Agent on Virutal Machine 
+#region install Log Analytics Agent on Virutal Machine 
 $ResourceGroup = ($hostpool).id.split("/")[4]
 $sessionhosts = Get-AzWvdSessionHost -HostpoolName  $HostpoolName -ResourceGroupName $ResourceGroup
 $virtualMachines = @($sessionhosts.ResourceId.Split("/")[-1])

@@ -46,5 +46,5 @@ $TemplateParameters = @{
     virtualMachines = $virtualMachines
     extensionNames = @("OMSExtenstion")
 }
-New-AzResourceGroupDeployment -ResourceGroupName $ResourceGroup -TemplateUri "https://raw.githubusercontent.com/srozemuller/Windows-Virtual-Desktop/master/Azure%20Monitor/deploy-lawsagent.json" -TemplateParameterObject $TemplateParameters
+New-AzResourceGroupDeployment -ResourceGroupName $ResourceGroup -TemplateUri "https://raw.githubusercontent.com/srozemuller/Windows-Virtual-Desktop/master/Azure-Monitor/deploy-lawsagent.json" -TemplateParameterObject $TemplateParameters
 #endregion

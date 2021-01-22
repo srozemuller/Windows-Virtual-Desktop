@@ -1,0 +1,62 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "actionGroupName": {
+            "type": "string",
+            "metadata": {
+                "description": "Unique name (within the Resource Group) for the Action group."
+            }
+        },
+        "actionGroupShortName": {
+            "type": "string",
+            "metadata": {
+                "description": "Short name (maximum 12 characters) for the Action group."
+            }
+        },
+        "receiverName": {
+            "type": "string",
+            "metadata": {
+                "description": "Specify the name"
+            }
+        },
+        "receiverEmailAddress": {
+            "type": "string",
+            "metadata": {
+                "description": "Give the emailadress where the alerts are going to"
+            }
+        },
+        "tags": {
+          "type": "object"  
+        }
+
+    },
+    "variables": {},
+    "resources": [
+        {
+            "type": "Microsoft.Insights/ActionGroups",
+            "name": "[parameters('actionGroupName')]",
+            "tags": "[parameters('tags')]",
+            "location": "Global",
+            "apiVersion": "2018-03-01",
+            "properties": {
+                "severity": 3,
+                "groupShortName": "[parameters('actionGroupShortName')]",
+                "enabled": true,
+                "emailReceivers": [
+                    {
+                        "name": "[parameters('receiverName')]",
+                        "emailAddress": "[parameters('receiverEmailAddress')]",
+                        "status": "Enabled"
+                    }
+                ]
+            }
+        }
+    ],
+    "outputs":{
+        "actionGroupResourceId":{
+            "type":"string",
+            "value":"[resourceId('Microsoft.Insights/actionGroups',parameters('actionGroupName'))]"
+        }
+    }
+}

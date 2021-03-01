@@ -1,5 +1,4 @@
-function Get-WvdVmResource
-{
+function Get-WvdVmResource {
     [CmdletBinding()]
     param (
         [parameter(mandatory = $true)][Object]$SessionHost
@@ -37,34 +36,54 @@ function Get-WvdLatestSessionHost {
 function Get-WvdSubnet {
     [CmdletBinding()]
     param (
-        [parameter(mandatory = $false)][string]$WvdHostpoolName,
-        [parameter(mandatory = $false)][string]$WvdHostpoolResourceGroup
+        [parameter(mandatory = $true)][string]$WvdHostpoolName,
+        [parameter(mandatory = $true)][string]$WvdHostpoolResourceGroup
     )
     try {
         $SessionHost = Get-WvdLatestSessionhost -WvdHostpoolName $WvdHostpoolName -WvdHostpoolResourceGroup $WvdHostpoolResourceGroup
     }
     catch {
-        Throw "No sessiohost has been found in $WvdHostpoolName, $_"
+        Throw "No sessionhost has been found in $WvdHostpoolName, $_"
     }
     $NetworkInterface = ($SessionHost).NetworkProfile
     $Subnet = (Get-AzNetworkInterface -ResourceId $NetworkInterface.NetworkInterfaces.id).IpConfigurations.subnet
     return $Subnet
 }
+function Get-WvdNsg {
+    [CmdletBinding()]
+    param (
+        [parameter(mandatory = $true)][string]$WvdHostpoolName,
+        [parameter(mandatory = $true)][string]$WvdHostpoolResourceGroup
+    )
+    try {
+        $Subnet = Get-WvdSubnet -WvdHostpoolName $WvdHostpoolName -WvdHostpoolResourceGroup $WvdHostpoolResourceGroup
+    }
+    catch {
+        Throw "No subnet has been found in $WvdHostpoolName, $_"
+    }
+    $WvdNsg = Get-AzNetworkSecurityGroup | Where-Object { $_.Subnets.id -match $Subnet.id }
+    if ($null -ne $WvdNsg) {
+        return $WvdNsg
+    }
+    else {
+        Throw "No Network Security Group assigned at subnet $Subnet"
+    }
+}
 
 function Get-WvdImageVersionStatus {
     [CmdletBinding()]
     param (
-        [parameter(mandatory = $false)][string]$WvdHostpoolName,
-        [parameter(mandatory = $false)][string]$WvdHostpoolResourceGroup
+        [parameter(mandatory = $true)][string]$WvdHostpoolName,
+        [parameter(mandatory = $true)][string]$WvdHostpoolResourceGroup
     )
     try {
-        $SessionHost = Get-WvdLatestSessionhost -WvdHostpoolName $WvdHostpoolName -WvdHostpoolResourceGroup $WvdHostpoolResourceGroup
+        $WvdHostpool = Get-AzWvdHostPool -HostPoolName $WvdHostpoolName -ResourceGroupName $WvdHostpoolResourceGroup
     }
     catch {
         Throw "No sessiohost has been found in $WvdHostpoolName, $_"
     }
-    $ImageReference = $SessionHost.StorageProfile.ImageReference.id
-    if ($ImageReference -match 'Microsoft.Compute/galleries/'){
+    $ImageReference = ($WvdHostpool.VMTemplate | ConvertFrom-Json).customImageId
+    if ($ImageReference -match 'Microsoft.Compute/galleries/') {
         $GalleryImageDefintion = get-AzGalleryImageDefinition -ResourceId $imageReference
         $GalleryName = $imageReference.Split("/")[-3]
         $Gallery = Get-AzGallery -Name $galleryName
@@ -72,10 +91,10 @@ function Get-WvdImageVersionStatus {
         $LastVersion = ($ImageVersions | select -last 1).Name
         $UpToDate = $True
         $Results = @()
-        foreach ($SessionHost in (Get-AzWvdSessionHost -HostPoolName $WvdHostpoolName -ResourceGroupName $WvdHostpoolResourceGroup)){
+        foreach ($SessionHost in (Get-AzWvdSessionHost -HostPoolName $WvdHostpoolName -ResourceGroupName $WvdHostpoolResourceGroup)) {
             $Resource = Get-AzResource -resourceId $SessionHost.ResourceId
             $CurrentVersion = (Get-AzVm -name $Resource.Name).StorageProfile.ImageReference.ExactVersion
-            if ($LastVersion -notmatch $CurrentVersion){
+            if ($LastVersion -notmatch $CurrentVersion) {
                 $UpToDate = $False
             }
             $SessionHost | Add-Member -membertype noteproperty -name LatestVersion -value $LastVersion
@@ -88,4 +107,47 @@ function Get-WvdImageVersionStatus {
     else {
         "Sessionhosts does not use an image from the image gallery"
     }
+}
+
+function New-WvdRegistrationToken {
+    [CmdletBinding()]
+    param (
+        [parameter(mandatory = $true)][string]$WvdHostpoolName,
+        [parameter(mandatory = $true)][string]$WvdHostpoolResourceGroup
+    )
+    try {
+        $WvdHostpool = Get-AzWvdHostPool -HostPoolName $WvdHostpoolName -ResourceGroupName $WvdHostpoolResourceGroup
+    }
+    catch {
+        Throw "No WVD Hostpool found for $WvdHostpoolName, $_"
+    }
+
+    $now = get-date
+    # Create a registration key for adding machines to the WVD Hostpool
+    $registered = Get-AzWvdRegistrationInfo -SubscriptionId $hostpoolSubscription -ResourceGroupName $resourceGroup -HostPoolName $hostpoolName
+    if (($null -eq $registered.ExpirationTime) -or ($registered.ExpirationTime -le ($now))) {
+        $registered = New-AzWvdRegistrationInfo -SubscriptionId $hostpoolSubscription -ResourceGroupName $resourceGroup -HostPoolName $hostpoolName -ExpirationTime $now.AddHours(4)
+    }
+    if ($registered.Token) {
+    }
+    return $registered
+    
+}
+
+New-WvdSessionHostFromSig {
+    [CmdletBinding()]
+    param (
+        [parameter(mandatory = $true)][string]$WvdHostpoolName,
+        [parameter(mandatory = $true)][string]$WvdHostpoolResourceGroup,
+        [parameter(mandatory = $true)][string]$AdminUsername,
+        [parameter(mandatory = $true)][string]$AdminPassword,
+        [parameter(mandatory = $false)][string]$Tags
+    )
+    try {
+        $WvdHostpool = Get-AzWvdHostPool -HostPoolName $WvdHostpoolName -ResourceGroupName $WvdHostpoolResourceGroup
+    }
+    catch {
+        Throw "No WVD Hostpool found for $WvdHostpoolName, $_"
+    }
+
 }

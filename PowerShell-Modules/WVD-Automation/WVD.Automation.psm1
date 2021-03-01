@@ -66,7 +66,7 @@ function Get-WvdNsg {
         return $WvdNsg
     }
     else {
-        Throw "No Network Security Group assigned to subnet $Subnet"
+        Throw "No Network Security Group assigned at subnet $Subnet"
     }
 }
 
@@ -149,5 +149,8 @@ New-WvdSessionHostFromSig {
     catch {
         Throw "No WVD Hostpool found for $WvdHostpoolName, $_"
     }
+}
 
+Set-WvdSessionhostToDrainMode {
+    
 }

@@ -11,7 +11,6 @@ function Set-WvdSessionhostDrainMode {
     Enter the WVD Hostpool resourcegroup name
     .EXAMPLE
     Get-WvdSubnet -WvdHostpoolName wvd-hostpool -ResourceGroupName wvd-resourcegroup
-    Add a comment to existing incidnet
     #>
     [CmdletBinding()]
     param (
@@ -47,7 +46,6 @@ function Set-WvdSessionhostDrainMode {
             $HostpoolName = $InputObject.Name.Split("/")[0]
             $ResourceGroupName = $InputObject.id.split("/")[4]
             $Name = $InputObject.Name.Split("/")[1]
-
           }
         Default {
 

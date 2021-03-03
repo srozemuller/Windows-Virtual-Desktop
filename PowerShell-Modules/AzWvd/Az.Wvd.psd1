@@ -9,7 +9,7 @@
 @{
 
 # Script module or binary module file associated with this manifest.
-RootModule = 'Az.Wvd'
+RootModule = 'Az.Wvd.psm1'
 
 # Version number of this module.
 ModuleVersion = '1.0.1'
@@ -24,7 +24,7 @@ GUID = 'fdf37ff7-689a-46de-82d4-66228b92dae4'
 Author = 'Sander Rozemuller'
 
 # Company or vendor of this module
-CompanyName = 'rozemuller.com'
+CompanyName = 'Unica ICT Solutions'
 
 # Copyright statement for this module
 Copyright = '(c) Sander Rozemuller. All rights reserved.'
@@ -33,7 +33,7 @@ Copyright = '(c) Sander Rozemuller. All rights reserved.'
 Description = 'High level automation cmdlets for Windows Virtual Desktop'
 
 # Minimum version of the PowerShell engine required by this module
-PowerShellVersion = '5.0'
+PowerShellVersion = '5.1'
 
 # Name of the PowerShell host required by this module
 # PowerShellHostName = ''
@@ -52,7 +52,10 @@ DotNetFrameworkVersion = '4.7.2'
 
 # Modules that must be imported into the global environment prior to importing this module
 RequiredModules = @(
-    @{ModuleName="Az.DesktopVirtualization";ModuleVersion="2.1.1";Guid="4cbade8e-48e0-42f8-a847-7872d0006d54"}
+    @{
+        ModuleName="Az.DesktopVirtualization"
+        ModuleVersion="2.1.1"
+    }
 )
 
 # Assemblies that must be loaded prior to importing this module
@@ -102,7 +105,6 @@ AliasesToExport = @()
 
 # Private data to pass to the module specified in RootModule/ModuleToProcess. This may also contain a PSData hashtable with additional module metadata used by PowerShell.
 PrivateData = @{
-
     PSData = @{
 
         # Tags applied to this module. These help with module discovery in online galleries.

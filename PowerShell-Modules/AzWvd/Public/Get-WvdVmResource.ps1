@@ -1,5 +1,5 @@
 #requires -module @{ModuleName = 'Az.Resources'; ModuleVersion = '3.2.1'}
-#requires -version 6.2
+
 function Get-WvdVmResource {
     <#
     .SYNOPSIS

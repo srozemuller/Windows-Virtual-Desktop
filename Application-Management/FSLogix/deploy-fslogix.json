@@ -1,0 +1,95 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "virtualMachines": {
+            "type": "array",
+            "metadata": {
+                "description": "The name for the VM."
+            }
+        },
+        "location": {
+            "type": "string",
+            "defaultValue": "[resourceGroup().location]",
+            "metadata": {
+                "description": "Location for all resources."
+            }
+        },
+        "vhdlocation": {
+            "type": "string",
+            "metadata": {
+                "description": "On which location is the profile location."
+            }
+        },
+        "installFileLocation": {
+            "type": "string",
+            "metadata": {
+                "description": "Where is the installation file located."
+            }
+        }
+    },
+    "variables": {
+        "virtualMachines": "[parameters('virtualMachines')]",
+        "apiVersion": "2020-06-01"
+    },
+    "resources": [
+        {
+            "apiVersion": "2019-10-01",
+            "type": "Microsoft.Resources/deployments",
+            "name": "loop-0",
+            "properties": {
+                "mode": "Incremental",
+                "parameters": {},
+                "template": {
+                    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {},
+                    "variables": {},
+                    "resources": [],
+                    "outputs": {}
+                }
+            }
+        },
+        {
+            "apiVersion": "2019-10-01",
+            "type": "Microsoft.Resources/deployments",
+            "name": "[concat('loop-', copyIndex(1))]",
+            "dependsOn": [
+                "[concat('loop-', copyIndex())]"
+            ],
+            "copy": {
+                "name": "iterator",
+                "count": "[length(parameters('virtualMachines'))]"
+            },
+            "properties": {
+                "mode": "Incremental",
+                "template": {
+                    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {},
+                    "variables": {},
+                    "resources": [
+                        {
+                            "type": "Microsoft.Compute/virtualMachines/extensions",
+                            "name": "[concat(variables('virtualMachines')[copyIndex()],'/FSLogixAgent')]",
+                            "apiVersion": "[variables('apiVersion')]",
+                            "location": "[parameters('location')]",
+                            "properties": {
+                                "publisher": "Microsoft.Compute",
+                                "type": "CustomScriptExtension",
+                                "typeHandlerVersion": "1.4",
+                                "autoUpgradeMinorVersion": true,
+                                "settings": {
+                                    "fileUris": [
+                                        "[parameters('installFileLocation')]"
+                                    ],
+                                    "commandToExecute": "[concat('powershell -ExecutionPolicy Unrestricted -File install-FsLogix.ps1', ' -vhdlocation ', parameters('vhdlocation'))]"
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
+        }
+    ]
+}

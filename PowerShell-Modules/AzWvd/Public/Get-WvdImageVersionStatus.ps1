@@ -1,71 +1,75 @@
-function Get-WvdImageVersionStatus {
+Function Get-WvdImageVersionStatus {
     <#
     .SYNOPSIS
-    Gets the image version from where the session host is starte.
+    Gets the image version from where the session host is started.
     .DESCRIPTION
     The function will help you getting insights if there are session hosts started from an old version in the Shared Image Gallery
     .PARAMETER HostpoolName
     Enter the WVD Hostpool name
     .PARAMETER ResourceGroupName
     Enter the WVD Hostpool resourcegroup name
+    .PARAMETER InputObject
+    You can put the hostpool object in here. 
+    .PARAMETER NotLatest
+    This is a switch parameter which let you control the output to show only the sessionhosts which are not started from the latest version.
     .EXAMPLE
     Get-WvdImageVersionStatus -WvdHostpoolName wvd-hostpool -ResourceGroupName wvd-resourcegroup
+    Get-AzWvdHostpool -WvdHostpoolName wvd-hostpool -ResourceGroupName wvd-resourcegroup | Get-WvdImageVersionStatus
     #>
     [CmdletBinding()]
     param (
         [parameter(Mandatory, ParameterSetName = 'Parameters')]
+        [ValidateNotNullOrEmpty()]
         [string]$HostpoolName,
 
         [parameter(Mandatory, ParameterSetName = 'Parameters')]
+        [ValidateNotNullOrEmpty()]
         [string]$ResourceGroupName,
 
-        [Parameter(Mandatory, ValueFromPipeline, ParameterSetName = 'Single')]
-        [pscustomobject]$SingleHost,
+        [parameter(Mandatory, ValueFromPipeline, ParameterSetName = 'InputObject')]
+        [ValidateNotNullOrEmpty()]
+        [PSCustomObject]$InputObject,
 
-        [Parameter(Mandatory, ValueFromPipeline, ParameterSetName = 'AllHosts')]
-        [pscustomobject]$AllSessionHosts
+        [parameter()]
+        [switch]$NotLatest
     )
 
     switch ($PsCmdlet.ParameterSetName) {
-        Single { 
+        InputObject { 
             $Parameters = @{
-                HostpoolName      = $InputObject.Name.Split("/")[0]
+                HostpoolName      = $InputObject.Name
                 ResourceGroupName = $InputObject.id.split("/")[4]
-                Name             = $InputObject.Name.Split("/")[1]
             }
-            $Sessionhosts = Get-AzWvdSessionHost @Parameters
-        }
-        AllHosts { 
-            $Parameters = @{
-                HostpoolName      = $InputObject.Name.Split("/")[0]
-                ResourceGroupName = $InputObject.id.split("/")[4]
-                Name             = $InputObject.Name.Split("/")[1]
-            }
-            $Sessionhosts = Get-AzWvdSessionHost @Parameters
         }
         Default {
             $Parameters = @{
                 HostPoolName      = $HostpoolName
                 ResourceGroupName = $ResourceGroupName
             }
-            $Sessionhosts = Get-AzWvdSessionHost @Parameters
         }
     }
-
+    try {
+        $WvdHostpool = Get-AzWvdHostPool @Parameters
+        $Sessionhosts = Get-AzWvdSessionHost @Parameters
+    }
+    catch {
+        Throw "No WVD Hostpool found with name $Hostpoolname in resourcegroup $ResourceGroupName or no sessionhosts"
+    }
     $ImageReference = ($WvdHostpool.VMTemplate | ConvertFrom-Json).customImageId
     if ($ImageReference -match 'Microsoft.Compute/galleries/') {
         $GalleryImageDefintion = get-AzGalleryImageDefinition -ResourceId $imageReference
         $GalleryName = $imageReference.Split("/")[-3]
         $Gallery = Get-AzGallery -Name $galleryName
         $ImageVersions = Get-AzGalleryImageVersion -ResourceGroupName $gallery.ResourceGroupName -GalleryName $Gallery.Name -GalleryImageDefinitionName $galleryImageDefintion.Name
-        $LastVersion = ($ImageVersions | select -last 1).Name
+        $LastVersion = ($ImageVersions | Select-Object -last 1).Name
         $Results = @()
         foreach ($SessionHost in $Sessionhosts) {
+            Write-Verbose "Searching for $($SessionHost.Name)"
             $HasLatestVersion = $true
             $IsVirtualMachine = $true
             $Resource = Get-AzResource -resourceId $SessionHost.ResourceId
             $CurrentVersion = (Get-AzVm -name $Resource.Name).StorageProfile.ImageReference.ExactVersion
-            if ($null -eq $CurrentVersion){
+            if ($null -eq $CurrentVersion) {
                 $IsVirtualMachine = $false
                 $HasLatestVersion = $null
             }
@@ -78,7 +82,12 @@ function Get-WvdImageVersionStatus {
             $SessionHost | Add-Member -membertype noteproperty -name IsVirtualMachine -value $IsVirtualMachine
             $Results += $SessionHost
         }
-        return $Results | Select-Object Name, CurrentVersion, HasLatestVersion, IsVirtualMachine
+        if ($NotLatest) {
+            return $Results | Where { (!($_.HasLatestVersion)) }
+        }
+        else { 
+            return $Results 
+        }
     }
     else {
         "Sessionhosts does not use an image from the image gallery"

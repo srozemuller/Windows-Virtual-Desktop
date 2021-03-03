@@ -20,9 +20,11 @@ function New-WvdRegistrationToken {
         [parameter(mandatory = $true, ValueFromPipeline)]
         [ValidateNotNullOrEmpty()]
         [string]$HostpoolName,
+
         [parameter(mandatory = $true, ValueFromPipeline)]
         [ValidateNotNullOrEmpty()]
         [string]$ResourceGroupName,
+
         [parameter(mandatory = $false)]
         [int]$HoursActive = 4
     )
@@ -38,8 +40,7 @@ function New-WvdRegistrationToken {
     $registered = Get-AzWvdRegistrationInfo -HostPoolName $HostpoolName -ResourceGroupName $ResourceGroupName 
     if (($null -eq $registered.ExpirationTime) -or ($registered.ExpirationTime -le ($now))) {
         $registered = New-AzWvdRegistrationInfo -HostPoolName $hostpoolName -ResourceGroupName $ResourceGroupName -ExpirationTime $now.AddHours($HoursActive)
-    }
-    if ($registered.Token) {
+        Write-Verbose "Requesting new token for $HoursActive hour(s)"
     }
     return $registered
 }

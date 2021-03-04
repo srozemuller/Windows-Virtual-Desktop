@@ -55,6 +55,19 @@ RequiredModules = @(
     @{
         ModuleName="Az.DesktopVirtualization"
         ModuleVersion="2.1.1"
+    },
+    @{
+        ModuleName="Az.Resources"
+        ModuleVersion="3.2.1"
+    },
+    @{
+        ModuleName="Az.Compute"
+        ModuleVersion="3.7.0"
+    },
+    ,
+    @{
+        ModuleName="Az.Network"
+        ModuleVersion="4.5.0"
     }
 )
 
@@ -76,7 +89,8 @@ RequiredModules = @(
 # Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
 FunctionsToExport = @(
     'Get-WvdLatestSessionHost',
-    'Get-WvdVmResource',
+    'Get-WvdSessionHostResources',
+    'Remove-WvdSessionHostResources'
     'Get-WvdImageVersionStatus',
     'Get-WvdNsg',
     'Get-WvdSubnet',

@@ -55,19 +55,6 @@ RequiredModules = @(
     @{
         ModuleName="Az.DesktopVirtualization"
         ModuleVersion="2.1.1"
-    },
-    @{
-        ModuleName="Az.Resources"
-        ModuleVersion="3.2.1"
-    },
-    @{
-        ModuleName="Az.Compute"
-        ModuleVersion="3.7.0"
-    },
-    ,
-    @{
-        ModuleName="Az.Network"
-        ModuleVersion="4.5.0"
     }
 )
 

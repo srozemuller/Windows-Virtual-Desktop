@@ -30,8 +30,14 @@ function Remove-WvdSessionHostResources {
 
         [parameter()]
         [ValidateNotNullOrEmpty()]
-        [Switch]$Force
-    )
+        [Switch]$Force,
+
+        [parameter()]
+        [ValidateNotNullOrEmpty()]
+        [ValidateSet("All","NotLatest")]
+        [Switch]$Scope
+    
+        )
 
     if ($Force) {
         $ForceStatus = $force

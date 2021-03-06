@@ -18,13 +18,19 @@ Function Get-WvdImageVersionStatus {
     #>
     [CmdletBinding()]
     param (
-        [parameter(Mandatory, ParameterSetName = 'Parameters')]
+        [parameter(Mandatory, ParameterSetName = 'Hostpool')]
+        [parameter(Mandatory, ParameterSetName = 'Sessionhost')]
         [ValidateNotNullOrEmpty()]
         [string]$HostpoolName,
 
-        [parameter(Mandatory, ParameterSetName = 'Parameters')]
+        [parameter(Mandatory, ParameterSetName = 'Hostpool')]
+        [parameter(Mandatory, ParameterSetName = 'Sessionhost')]
         [ValidateNotNullOrEmpty()]
         [string]$ResourceGroupName,
+
+        [parameter(Mandatory, ParameterSetName = 'Sessionhost')]
+        [ValidateNotNullOrEmpty()]
+        [string]$SessionHostName,
 
         [parameter(Mandatory, ValueFromPipeline, ParameterSetName = 'InputObject')]
         [ValidateNotNullOrEmpty()]
@@ -36,60 +42,80 @@ Function Get-WvdImageVersionStatus {
 
     switch ($PsCmdlet.ParameterSetName) {
         InputObject { 
-            $Parameters = @{
-                HostpoolName      = $InputObject.Name
-                ResourceGroupName = $InputObject.id.split("/")[4]
+            if ($InputObject.Type -eq 'Microsoft.DesktopVirtualization/hostpools') {
+                $HostpoolParameters = @{
+                    HostpoolName      = $InputObject.Name
+                    ResourceGroupName = $InputObject.id.split("/")[4]
+                }
+            }
+            else {
+                Write-Verbose "Sessionhost(s) provided"
+                $Sessionhosts = $InputObject     
             }
         }
-        Default {
-            $Parameters = @{
+        Hostpool {
+            $HostpoolParameters = @{
                 HostPoolName      = $HostpoolName
                 ResourceGroupName = $ResourceGroupName
             }
         }
-    }
-    try {
-        $WvdHostpool = Get-AzWvdHostPool @Parameters
-        $Sessionhosts = Get-AzWvdSessionHost @Parameters
-    }
-    catch {
-        Throw "No WVD Hostpool found with name $Hostpoolname in resourcegroup $ResourceGroupName or no sessionhosts"
-    }
-    $ImageReference = ($WvdHostpool.VMTemplate | ConvertFrom-Json).customImageId
-    if ($ImageReference -match 'Microsoft.Compute/galleries/') {
-        $GalleryImageDefintion = get-AzGalleryImageDefinition -ResourceId $imageReference
-        $GalleryName = $imageReference.Split("/")[-3]
-        $Gallery = Get-AzGallery -Name $galleryName
-        $ImageVersions = Get-AzGalleryImageVersion -ResourceGroupName $gallery.ResourceGroupName -GalleryName $Gallery.Name -GalleryImageDefinitionName $galleryImageDefintion.Name
-        $LastVersion = ($ImageVersions | Select-Object -last 1).Name
-        $Results = @()
-        foreach ($SessionHost in $Sessionhosts) {
-            Write-Verbose "Searching for $($SessionHost.Name)"
-            $HasLatestVersion = $true
-            $IsVirtualMachine = $true
-            $Resource = Get-AzResource -resourceId $SessionHost.ResourceId
-            $CurrentVersion = (Get-AzVm -name $Resource.Name).StorageProfile.ImageReference.ExactVersion
-            if ($null -eq $CurrentVersion) {
-                $IsVirtualMachine = $false
-                $HasLatestVersion = $null
+        Default {
+            $SessionHostParameters = @{
+                HostPoolName      = $HostpoolName
+                ResourceGroupName = $ResourceGroupName
+                Name = $SessionHostName
             }
-            if ($LastVersion -notmatch $CurrentVersion) {
-                $HasLatestVersion = $False
-            }
-            $SessionHost | Add-Member -membertype noteproperty -name LatestVersion -value $LastVersion
-            $SessionHost | Add-Member -membertype noteproperty -name CurrentVersion -value $CurrentVersion
-            $SessionHost | Add-Member -membertype noteproperty -name HasLatestVersion -value $HasLatestVersion
-            $SessionHost | Add-Member -membertype noteproperty -name IsVirtualMachine -value $IsVirtualMachine
-            $Results += $SessionHost
-        }
-        if ($NotLatest) {
-            return $Results | Where { (!($_.HasLatestVersion)) }
-        }
-        else { 
-            return $Results 
         }
     }
-    else {
-        "Sessionhosts does not use an image from the image gallery"
+    if ($HostpoolParameters) {
+        Write-Verbose "Hostpool parameters provided"
+        try {
+            $WvdHostpool = Get-AzWvdHostPool @HostpoolParameters
+            $ImageReference = ($WvdHostpool.VMTemplate | ConvertFrom-Json).customImageId
+        }
+        catch {
+            Throw "No WVD Hostpool found with name $Hostpoolname in resourcegroup $ResourceGroupName or no sessionhosts"
+        }
+    }
+    if ($SessionHostParameters) {
+        Write-Verbose "Sessionhost parameters provided"
+        try {
+            $SessionHosts = Get-AzWvdsessionhost @SessionHostParameters
+        }
+        catch {
+            Throw "No WVD Hostpool found with name $Hostpoolname in resourcegroup $ResourceGroupName or no sessionhosts"
+        }
+    }
+    $Results = @()
+    foreach ($SessionHost in $Sessionhosts) {
+        Write-Verbose "Searching for $($SessionHost.Name)"
+        $HasLatestVersion, $IsVirtualMachine = $true
+        $Resource = Get-AzResource -resourceId $SessionHost.ResourceId
+        $imageReference = (Get-AzVm -name $Resource.Name).StorageProfile.ImageReference
+        if ($ImageReference){
+            $GalleryImageDefintion = get-AzGalleryImageDefinition -ResourceId $imageReference
+            $GalleryName = $imageReference.Split("/")[-3]
+            $Gallery = Get-AzGallery -Name $galleryName
+            $ImageVersions = Get-AzGalleryImageVersion -ResourceGroupName $gallery.ResourceGroupName -GalleryName $Gallery.Name -GalleryImageDefinitionName $galleryImageDefintion.Name
+            $LastVersion = ($ImageVersions | Select-Object -last 1).Name
+        }
+        if ($null -eq $imageReference.ExactVersion) {
+            $IsVirtualMachine = $false
+            $HasLatestVersion = $null
+        }
+        if ($LastVersion -notmatch $imageReference.ExactVersion) {
+            $HasLatestVersion = $False
+        }
+        $SessionHost | Add-Member -membertype noteproperty -name LatestVersion -value $LastVersion
+        $SessionHost | Add-Member -membertype noteproperty -name CurrentVersion -value $imageReference.ExactVersion
+        $SessionHost | Add-Member -membertype noteproperty -name HasLatestVersion -value $HasLatestVersion
+        $SessionHost | Add-Member -membertype noteproperty -name IsVirtualMachine -value $IsVirtualMachine
+        $Results += $SessionHost
+    }
+    if ($NotLatest) {
+        return $Results | Where { (!($_.HasLatestVersion)) }
+    }
+    else { 
+        return $Results 
     }
 }

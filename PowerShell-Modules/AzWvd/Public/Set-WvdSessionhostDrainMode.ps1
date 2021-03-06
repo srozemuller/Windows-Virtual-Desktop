@@ -75,5 +75,4 @@ function Set-WvdSessionhostDrainMode {
             }
         }
     }
-    
 }

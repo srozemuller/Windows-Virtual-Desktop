@@ -10,16 +10,16 @@ function Export-WvdConfig {
     Enter the WVD hostpool resource group name.
     .PARAMETER 
     .EXAMPLE
-    Get-WvdSessionHostResources -SessionHost SessionHostObject
+    Export-WvdConfig -Hostpoolname $hostpoolName -resourceGroup $ResourceGroup -Scope Hostpool,SessionHosts -Verbose -FilePath .\wvdexport.html
     Add a comment to existing incidnet
     #>
     [CmdletBinding()]
     param (
-        [parameter(Mandatory, ParameterSetName = 'Hostpool')]
+        [parameter(Mandatory, ParameterSetName = 'Parameters')]
         [ValidateNotNullOrEmpty()]
         [string]$HostpoolName,
 
-        [parameter(Mandatory, ParameterSetName = 'Hostpool')]
+        [parameter(Mandatory, ParameterSetName = 'Parameters')]
         [ValidateNotNullOrEmpty()]
         [string]$ResourceGroupName,
 
@@ -48,24 +48,33 @@ function Export-WvdConfig {
     if ($null -eq $FilePath) {
         $FilePath = ".\WvdExport.Html"
     }
+    $HtmlBody = @()
     switch -wildcard ($Scope) {
         Hostpool* { 
             $ConvertParameters = @{
                 Property = "Description", "HostpoolType", "Type"
                 Fragment = $true
             }
-            $HostpoolContent = Get-AzWvdHostPool -Name $HostpoolName -ResourceGroupName $ResourceGroup | ConvertTo-Html @ConvertParameters
+            $HostpoolParameters = @{
+                Name              = $HostpoolName 
+                ResourceGroupName = $ResourceGroup 
+            }
+            $HostpoolContent = Get-AzWvdHostPool @HostpoolParameters | ConvertTo-Html @ConvertParameters
+            $HtmlBody += $HostpoolContent
+        }
+        SessionHosts* { 
+            $HtmlBody += Get-SessionHostHtmlContent -HostpoolName $HostpoolName -ResourceGroupName $ResourceGroupName
         }
         Default {
-            
+            $HtmlBody += Get-SessionHostHtmlContent -HostpoolName $HostpoolName -ResourceGroupName $ResourceGroupName
         }
     }
-    $AllContent = @()
     $HtmlParameters = @{
         Title  = "WVD Information Report"
-        body   = "$HostpoolContent"
+        body   = $HtmlBody
         CssUri = ".\Private\exportconfig.css"
     }
-    $AllContent | ConvertTo-HTML @HtmlParameters | Out-File ".\WvdExport.Html"
+    Write-Verbose "Exporting config to $FilePath"
+    ConvertTo-HTML @HtmlParameters | Out-File $FilePath
 
 }

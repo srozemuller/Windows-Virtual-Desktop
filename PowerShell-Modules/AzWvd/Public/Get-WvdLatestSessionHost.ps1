@@ -54,8 +54,8 @@ function Get-WvdLatestSessionHost {
     $All = @{}
     $Names = $SessionHosts | % { ($_.Name).Split("/")[-1].Split(".")[0] }
     $Names | % { $All.add([int]($_).Split("-")[-1], $_) }
-    $VirtualMachineName = $All.GetEnumerator() | select -first 1 -ExpandProperty Value
-    $LatestSessionHost = $SessionHosts | Where-Object {$_.Name -match $LatestHost } |FL
+    $VirtualMachineName = $All.GetEnumerator() | Select-Object -first 1 -ExpandProperty Value
+    $LatestSessionHost = $SessionHosts | Where-Object {$_.Name -match $LatestHost } | FL
     $VirtualMachine = Get-AzVM -Name $VirtualMachineName
     $VirtualMachine | Add-Member -membertype noteproperty -name SessionHostInfo -value $LatestSessionHost
     return $VirtualMachine

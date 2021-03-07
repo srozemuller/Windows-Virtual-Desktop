@@ -41,6 +41,7 @@ Function Get-WvdImageVersionStatus {
     )
     Begin {
         Write-Verbose "Start searching"
+        precheck
     }
     Process {
         switch ($PsCmdlet.ParameterSetName) {
@@ -51,10 +52,13 @@ Function Get-WvdImageVersionStatus {
                         ResourceGroupName = $InputObject.id.split("/")[4]
                     }
                 }
-                else {
+                elseif ($InputObject.Type -eq 'Microsoft.DesktopVirtualization/hostpools/sessionhosts'){
                     Write-Verbose "Sessionhost(s) provided, $($InputObject.Name)"
-
                     $Sessionhosts = $InputObject
+                }
+                else {
+                    Write-Error "No correct resources provided, must be hostpool or sessionhost"
+                    Break
                 }
             }
             Hostpool {

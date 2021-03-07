@@ -38,7 +38,9 @@ function Remove-WvdSessionHostResources {
         [Switch]$Scope
     
     )
-    Begin {}
+    Begin {
+        precheck
+    }
     Process {
         switch ($PsCmdlet.ParameterSetName) {
             InputObject { 

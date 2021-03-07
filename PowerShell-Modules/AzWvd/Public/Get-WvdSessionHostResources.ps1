@@ -14,13 +14,74 @@ function Get-WvdSessionHostResources {
     #>
     [CmdletBinding()]
     param (
-        [parameter(mandatory = $true, ValueFromPipeline)]
+        [parameter(Mandatory, ParameterSetName = 'Hostpool')]
+        [parameter(Mandatory, ParameterSetName = 'Sessionhost')]
         [ValidateNotNullOrEmpty()]
-        [Object]$SessionHost
+        [string]$HostpoolName,
+
+        [parameter(Mandatory, ParameterSetName = 'Hostpool')]
+        [parameter(Mandatory, ParameterSetName = 'Sessionhost')]
+        [ValidateNotNullOrEmpty()]
+        [string]$ResourceGroupName,
+
+        [parameter(Mandatory, ParameterSetName = 'Sessionhost')]
+        [ValidateNotNullOrEmpty()]
+        [string]$SessionHostName
     )
     
-    $Resource = Get-AzResource -ResourceId $SessionHost.ResourceId
-    $VirtualMachine = (Get-AzVm -Name $Resource.Name)
-    Write-Verbose "Found virtual machine: $($Resource.Name)"
-    return $VirtualMachine
+    Begin {
+        Write-Verbose "Start searching"
+        precheck
+    }
+    Process {
+        switch ($PsCmdlet.ParameterSetName) {
+            Hostpool {
+                $HostpoolParameters = @{
+                    HostPoolName      = $HostpoolName
+                    ResourceGroupName = $ResourceGroupName
+                }
+            }
+            Default {
+                $SessionHostParameters = @{
+                    HostPoolName      = $HostpoolName
+                    ResourceGroupName = $ResourceGroupName
+                    Name              = $SessionHostName
+                }
+            }
+        }
+        if ($HostpoolParameters) {
+            Write-Verbose "Hostpool parameters provided"
+            try {
+                $SessionHosts = Get-AzWvdsessionhost @HostpoolParameters
+            }
+            catch {
+                Throw "No WVD Hostpool found with name $Hostpoolname in resourcegroup $ResourceGroupName or no sessionhosts"
+            }
+        }
+        if ($SessionHostParameters) {
+            Write-Verbose "Sessionhost parameters provided"
+            try {
+                $SessionHosts = Get-AzWvdsessionhost @SessionHostParameters
+            }
+            catch {
+                Throw "No WVD Hostpool found with name $Hostpoolname in resourcegroup $ResourceGroupName or no sessionhosts"
+            }
+        }
+        $VirtualMachines = @()
+        foreach ($SessionHost in $SessionHosts) {
+            Write-Verbose "Searching for $($SessionHost.Name)"
+            $HasLatestVersion, $IsVirtualMachine = $False
+            try {
+                $Resource = Get-AzResource -resourceId $SessionHost.ResourceId
+            }
+            catch {
+                Throw "$SessionHost has no Virtual Machine resource"
+            }
+            $VirtualMachines += Get-AzVm -name $Resource.Name
+        }
+    }
+    End {
+        return $VirtualMachines
+    }
+
 }

@@ -127,5 +127,7 @@ Function Get-WvdImageVersionStatus {
             return $Sessionhosts 
         }
     }
-    End { Write-Verbose "All host object updated" }
+    End { 
+        Write-Verbose "All host objects updated" 
+    }
 }

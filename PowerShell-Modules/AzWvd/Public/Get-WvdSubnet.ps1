@@ -14,8 +14,13 @@ function Get-WvdSubnet {
     #>
     [CmdletBinding()]
     param (
-        [parameter(mandatory = $true)][string]$HostpoolName,
-        [parameter(mandatory = $true)][string]$ResourceGroupName
+        [parameter(Mandatory)]
+        [ValidateNotNullOrEmpty()]
+        [string]$HostpoolName,
+        
+        [parameter(Mandatory)]
+        [ValidateNotNullOrEmpty()]
+        [string]$ResourceGroupName
     )
     try {
         $SessionHost = Get-WvdLatestSessionhost -HostpoolName $HostpoolName -ResourceGroupName $ResourceGroupName
@@ -25,5 +30,6 @@ function Get-WvdSubnet {
     }
     $NetworkInterface = ($SessionHost).NetworkProfile
     $Subnet = (Get-AzNetworkInterface -ResourceId $NetworkInterface.NetworkInterfaces.id).IpConfigurations.subnet
-    return $Subnet
+    $SubnetConfig = Get-AzVirtualNetworkSubnetConfig -ResourceId $Subnet.Id
+    return $SubnetConfig
 }

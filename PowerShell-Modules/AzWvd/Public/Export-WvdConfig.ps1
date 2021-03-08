@@ -28,20 +28,16 @@ function Export-WvdConfig {
         [PSCustomObject]$InputObject,
 
         [parameter()]
-        [ValidateSet("HTML", "CSV")]
-        [string]$ExportType,
-        
-        [parameter()]
         [switch]$Html,
 
         [parameter()]
         [switch]$CSV,
 
-        [parameter()]
+        [parameter(Mandatory)]
         [string]$FilePath,
 
         [parameter()]
-        [ValidateSet("Hostpool", "Sessionhosts")]
+        [ValidateSet("Hostpool", "Sessionhosts","SubnetConfig")]
         [array]$Scope
     )
 
@@ -54,10 +50,11 @@ function Export-WvdConfig {
             $ConvertParameters = @{
                 Property = "Description", "HostpoolType", "Type"
                 Fragment = $true
+                PreContent = "<p>Windows Virtual Desktop information for $HostpoolName</p>"
             }
             $HostpoolParameters = @{
                 Name              = $HostpoolName 
-                ResourceGroupName = $ResourceGroup 
+                ResourceGroupName = $ResourceGroupName 
             }
             $HostpoolContent = Get-AzWvdHostPool @HostpoolParameters | ConvertTo-Html @ConvertParameters
             $HtmlBody += $HostpoolContent
@@ -65,14 +62,20 @@ function Export-WvdConfig {
         SessionHosts* { 
             $HtmlBody += Get-SessionHostHtmlContent -HostpoolName $HostpoolName -ResourceGroupName $ResourceGroupName
         }
+        SubnetConfig* { 
+            $HtmlBody += Get-SubnetConfigHtmlContent -HostpoolName $HostpoolName -ResourceGroupName $ResourceGroupName
+        }        
         Default {
             $HtmlBody += Get-SessionHostHtmlContent -HostpoolName $HostpoolName -ResourceGroupName $ResourceGroupName
         }
     }
+    $Css = Get-Content -Path '.\Private\exportconfig.css' -Raw
+    $style= ("<style>`n") + $Css + ("`n</style>")
     $HtmlParameters = @{
         Title  = "WVD Information Report"
         body   = $HtmlBody
-        CssUri = ".\Private\exportconfig.css"
+        Head   = $style
+        PostContent = "<H5><i>$(get-date)</i></H5>"
     }
     Write-Verbose "Exporting config to $FilePath"
     ConvertTo-HTML @HtmlParameters | Out-File $FilePath

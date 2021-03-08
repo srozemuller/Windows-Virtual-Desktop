@@ -1,14 +1,39 @@
-html,body{
-    font-family:Verdana,sans-serif;font-size:12px;line-height:1.5
+body { background-color:#FFFFFF;
+    font-family:Verdana, Geneva, Tahoma, sans-serif;
+    font-size:10pt; 
 }
-html{
-    overflow-x:hidden}
+ 
+table { 
+    border:1px solid 757575;
+    margin-left:30px;
+}
+tr:nth-child(even) {background: #ececec}
+tr:nth-child(odd) {background: #FFFFFF}
+
+th { 
+    color:#FFFFFF;
+    background: #039BE5;
+    font-size: 10pt;
+}
+p{
+    color: #212121;
+    font-weight: 600;
+    font-variant: small-caps;
+}
+
 h1{
-    font-size:36px}
-h2{font-size:30px}
-h3{font-size:24px}
-h4{font-size:20px}
-h5{font-size:18px}
-h6{font-size:16px}
-h1,h2,h3,h4,h5,h6{font-family:"Segoe UI",Arial,sans-serif;font-weight:400;margin:10px 0}.w3-wide{letter-spacing:4px}
-hr{border:0;border-top:1px solid #eee;margin:20px 0}
+    color:#e53935;
+}
+h2 {
+    font-family:Verdana, Geneva, Tahoma, sans-serif;
+    color:#6D7B8D;
+}
+h5{
+    color:#757575;
+}
+.GoodStatus {
+    color: #43A047;
+}
+.WrongStatus {
+    color: #e53935;
+}

@@ -55,11 +55,9 @@ function Remove-WvdSessionHostResources {
                 $Resources = Get-AzWvdSessionHost @Parameters
             }
         }
+        $ForceStatus = $false
         if ($Force) {
-            $ForceStatus = $force
-        }
-        else {
-            $ForceStatus = $false
+            $ForceStatus = $true
         }
         foreach ($Object in $Resources) {
             Write-Host $Object.ResourceId

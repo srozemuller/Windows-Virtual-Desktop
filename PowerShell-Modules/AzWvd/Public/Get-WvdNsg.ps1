@@ -29,6 +29,6 @@ function Get-WvdNsg {
         return $WvdNsg
     }
     else {
-        Throw "No Network Security Group assigned at subnet $Subnet"
+        Throw "No Network Security Group assigned to subnet $Subnet"
     }
 }

@@ -183,7 +183,7 @@ if ($newVm) {
         Status                 = $newVm.StatusCode
         hostPool               = $hostpoolName
         virtualMachineName     = $VirtualMachineName
-        resourceGroupName      = $resourceGroup.Name
+        resourceGroupName      = $ResourceGroup.ResourceGroupName
         virtualMachinePublicIp = $publicIp
         username               = $userName
         password               = $password | ConvertFrom-SecureString -AsPlainText

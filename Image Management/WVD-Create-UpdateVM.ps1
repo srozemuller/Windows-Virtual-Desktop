@@ -19,9 +19,11 @@ Name of the temporary resource group
 
 .PARAMETER ResourceGroupLocation
 The resource group its location
-.EXAMPLE
 
-.\DeployAgent.ps1 -AgentInstallerFolder '.\RDInfraAgentInstall\' -AgentBootServiceInstallerFolder '.\RDAgentBootLoaderInstall\' -SxSStackInstallerFolder '.\RDInfraSxSStackInstall\' -EnableSxSStackScriptFolder ".\EnableSxSStackScript\" 
+.PARAMETER localPublicIp
+Your local public IP to add to the NSG
+.EXAMPLE
+.\WVD-Create-UpdateVM.ps1 -HostpoolName 'wvd-hostpool' -SnapshotName 'before-sysprep-snapshot' -TempResourceGroup 'rg-temp-deploy' -ResourceGroupLocation 'westeurope' -localPublicIp 127.0.0.1
 #>
 param(
     [parameter(mandatory = $true)]
@@ -34,7 +36,10 @@ param(
     [string]$TempResourceGroup,
 
     [parameter(mandatory = $true)]
-    [string]$ResourceGroupLocation
+    [string]$ResourceGroupLocation,
+
+    [parameter(mandatory = $true)]
+    [string]$localPublicIp
 )
 
 import-module az.desktopvirtualization
@@ -84,6 +89,13 @@ function create-randomString($type) {
 # Get WVD hostpool information
 $hostpool = Get-AzWvdHostPool | Where-Object { $_.Name -eq $hostpoolname }
 $hostpoolResourceGroup = ($hostpool).id.split("/")[4]
+# Get current WVD Configurgation
+$sessionHosts = Get-AzWvdSessionHost -ResourceGroupName $hostpoolResourceGroup -HostPoolName $hostpool.name
+$sessionHostName = ($sessionHosts.Name.Split("/")[-1]).Split(".")[0]
+$currentVmInfo = Get-AzVM -name $sessionHostName
+$virtualMachineSize = $currentVmInfo.hardwareprofile.vmsize
+$virtualNetworkSubnet = (Get-AzNetworkInterface -ResourceId $currentVmInfo.NetworkProfile.NetworkInterfaces.id).IpConfigurations.subnet.id
+
 
 # Snapshot values for creating a disk
 try {
@@ -97,9 +109,10 @@ catch {
 # Creating a new temporary resource group first
 $ResourceGroup = New-AzResourceGroup -Name $TempResourceGroup -Location $ResourceGroupLocation
 
+$VirtualMachineName = ('vm_' + $snapshot.name)
 # Creating a disk
 $diskConfig = New-AzDiskConfig -SkuName "Premium_LRS" -Location $ResourceGroup.location -CreateOption Copy -SourceResourceId $snapshot.Id
-$diskname = ($snapshot.name + '-OS')
+$diskname = ($VirtualMachineName.ToLower() + '-OS')
 $disk = Get-azdisk -diskname $diskname
 try {
     $disk = New-AzDisk -Disk $diskConfig -ResourceGroupName $ResourceGroup.resourceGroupName -DiskName $diskName
@@ -107,15 +120,6 @@ try {
 catch {
     Throw "$diskname allready exits, $_"
 }
-
-# Get current WVD Configurgation
-$sessionHosts = Get-AzWvdSessionHost -ResourceGroupName $hostpoolResourceGroup -HostPoolName $hostpool.name
-$sessionHostName = ($sessionHosts.Name.Split("/")[-1]).Split(".")[0]
-$currentVmInfo = Get-AzVM -name $sessionHostName
-$virtualMachineSize = $currentVmInfo.hardwareprofile.vmsize
-$virtualNetworkSubnet = (Get-AzNetworkInterface -ResourceId $currentVmInfo.NetworkProfile.NetworkInterfaces.id).IpConfigurations.subnet.id
-
-$VirtualMachineName = ('vm' + $snapshot.name)
 
 $NicParameters = @{
     Name              = ($VirtualMachineName.ToLower() + '_nic')
@@ -149,19 +153,28 @@ add-firewallRule -NSG $NSG -localPublicIp $localPublicIp -port 3389
 $nic.NetworkSecurityGroup = $nsg
 $nic | Set-AzNetworkInterface
 
-$userName = create-randomString -type 'username'
-$password = ConvertTo-SecureString (create-randomString -type 'password') -AsPlainText -Force
-$Credential = New-Object System.Management.Automation.PSCredential ($userName, $password);
-
 # Creating virtual machine configuration
 $VirtualMachine = New-AzVMConfig -VMName $VirtualMachineName -VMSize $virtualMachineSize
 # Use the Managed Disk Resource Id to attach it to the virtual machine. Please change the OS type to linux if OS disk has linux OS
 $VirtualMachine = Set-AzVMOSDisk -VM $VirtualMachine -ManagedDiskId $disk.Id -CreateOption Attach -Windows
 # Create a public IP for the VM
 $VirtualMachine = Add-AzVMNetworkInterface -VM $VirtualMachine -Id $nic.Id
-
 #Create the virtual machine with Managed Disk
 $newVm = New-AzVM -VM $VirtualMachine -ResourceGroupName $ResourceGroup.resourceGroupName -Location $ResourceGroup.Location
+
+$userName = create-randomString -type 'username'
+$password = ConvertTo-SecureString (create-randomString -type 'password') -AsPlainText -Force
+$Credential = New-Object System.Management.Automation.PSCredential ($userName, $password);
+
+$CredentialParameters = @{
+    ResourceGroupName  = $ResourceGroup.ResourceGroupName
+    Location           = $ResourceGroup.Location
+    VMName             = $VirtualMachineName
+    Credential         = $Credential
+    typeHandlerVersion = "2.0"
+    Name               = "VMAccessAgent"
+}
+Set-AzVMAccessExtension @CredentialParameters
 
 if ($newVm) {
     #Adding the role

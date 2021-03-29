@@ -3,7 +3,7 @@ param(
     [parameter(mandatory = $false)][string]$CountersTemplate,
     [parameter(mandatory = $true)][string]$ResourceGroup,
     [parameter(mandatory = $true)][string]$Location,
-    [parameter(mandatory = $false)][string]$WorkspaceName
+    [parameter(mandatory = $true)][string]$WorkspaceName
 
 )
 Import-Module Az.OperationalInsights

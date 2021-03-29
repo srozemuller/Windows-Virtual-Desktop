@@ -1,9 +1,23 @@
 param(
-    [parameter(mandatory = $false)][string]$EventsTemplate,
-    [parameter(mandatory = $false)][string]$CountersTemplate,
-    [parameter(mandatory = $true)][string]$ResourceGroup,
-    [parameter(mandatory = $true)][string]$Location,
-    [parameter(mandatory = $true)][string]$WorkspaceName
+    [parameter(Mandatory)]
+    [ValidateNotNullOrEmpty()]
+    [string]$EventsTemplate,
+
+    [parameter(Mandatory)]
+    [ValidateNotNullOrEmpty()]
+    [string]$CountersTemplate,
+    
+    [parameter(Mandatory)]
+    [ValidateNotNullOrEmpty()]
+    [string]$ResourceGroup,
+    
+    [parameter(Mandatory)]
+    [ValidateNotNullOrEmpty()]
+    [string]$Location,
+
+    [parameter(Mandatory)]
+    [ValidateNotNullOrEmpty()]
+    [string]$WorkspaceName
 
 )
 Import-Module Az.OperationalInsights
@@ -11,14 +25,13 @@ Import-Module Az.OperationalInsights
 if ($null -eq $WorkspaceName) {
     Write-Host "No Log Analytics Workspace name provided, creating new Workspace"
     $WorkspaceName = "log-analytics-wvd-" + (Get-Random -Maximum 99999) # workspace names need to be unique across all Azure subscriptions - Get-Random helps with this for the example code
-
     # Create the workspace
     New-AzOperationalInsightsWorkspace -Location $Location -Name $WorkspaceName -Sku Standard -ResourceGroupName $ResourceGroup
+    Write-Host "Created workspace $WorkspaceName"
 }
-Write-Host "Created workspace $WorkspaceName"
-
-$WindowsEvents = Get-Content $EventsTemplate | ConvertFrom-Json
-$PerformanceCounters = Get-Content $CountersTemplate | ConvertFrom-Json
+else {
+    $WorkspaceName = Get-AzOperationalInsightsWorkspace -Name $WorkspaceName -ResourceGroupName $ResourceGroup
+}
 
 function Get-CorrectEventLevels($EventLevels) {
     $CollectInformation, $collectWarnings, $collectErrors = $false
@@ -30,7 +43,7 @@ function Get-CorrectEventLevels($EventLevels) {
         collectWarnings    = $collectWarnings
         collectErrors      = $collectErrors
     }
-    $eventLevels
+    return $eventLevels
 }
 # A slash (/) is not allowed in an object name, converting it if needed.
 function Make-NameAzureFriendly($Name) {
@@ -40,6 +53,7 @@ function Make-NameAzureFriendly($Name) {
 }
 
 If ($EventsTemplate) {
+    $WindowsEvents = Get-Content $EventsTemplate | ConvertFrom-Json
     foreach ($WindowsEventLog in $WindowsEvents.WindowsEvent.EventLogNames) {
         $Level = Get-CorrectEventLevels -EventLevels $WindowsEventLog.EventTypes
         $Name = Make-NameAzureFriendly -Name $WindowsEventLog.Value
@@ -49,8 +63,8 @@ If ($EventsTemplate) {
 }
 
 If ($CountersTemplate) {
+    $PerformanceCounters = Get-Content $CountersTemplate | ConvertFrom-Json
     foreach ($CounterObject in $PerformanceCounters.WindowsPerformanceCounter) {
-        $CounterObject
         foreach ($Counter in $CounterObject.Counters) {
             $Name = Make-NameAzureFriendly -Name $Counter.name
             $Parameters = @{
@@ -60,7 +74,6 @@ If ($CountersTemplate) {
                 IntervalSeconds = $Counter.IntervalSeconds
                 Name            = $Name
             }
-            $Parameters
             New-AzOperationalInsightsWindowsPerformanceCounterDataSource -ResourceGroupName $ResourceGroup -WorkspaceName $WorkspaceName @parameters
         }
     }

@@ -1,0 +1,39 @@
+{
+    "WindowsPerformanceCounter": [
+        {
+            "Object": "Process",
+            "Counters": [
+                {
+                    "InstanceName": "*",
+                    "CounterName": "% User Time",
+                    "IntervalSeconds": 60,
+                    "Name": "All Process Percent User Time"
+                },
+                {
+                    "InstanceName": "*",
+                    "CounterName": "Thread Count",
+                    "IntervalSeconds": 60,
+                    "Name": "All Process Thread Count"
+                },
+                {
+                    "InstanceName": "*",
+                    "CounterName": "% Processor Time",
+                    "IntervalSeconds": 60,
+                    "Name": "All Process Percent Processor Time"
+                },
+                {
+                    "InstanceName": "*",
+                    "CounterName": "IO Write Operations/sec",
+                    "IntervalSeconds": 60,
+                    "Name": "All Process IO Write Operations/sec"
+                },
+                {
+                    "InstanceName": "*",
+                    "CounterName": "IO Read Operations/sec",
+                    "IntervalSeconds": 60,
+                    "Name": "All Process IO Read Operations/sec"
+                }
+            ]
+        }
+    ]
+}

@@ -1,0 +1,181 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "virtualMachineName": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of the Shared Image Gallery."
+            }
+        },
+        "subnetRef": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of the Image Version - should follow <MajorVersion>.<MinorVersion>.<Patch>."
+            }
+        },
+        "virtualMachineSize": {
+            "type": "string",
+            "defaultvalue": "Standard_D2s_v3",
+            "metadata": {
+                "description": "Size of the machine"
+            }
+        },
+        "PublicIpSku": {
+            "type": "string",
+            "allowedValues": [
+                "Basic",
+                "Standard"
+            ],
+            "metadata": {
+                "description": "Name of a public IP address SKU. - Basic or Standard"
+            }
+        },
+        "PublicIpAllocationMethod": {
+            "type": "string",
+            "allowedValues": [
+                "Dynamic",
+                "Static"
+            ],
+            "metadata": {
+                "description": "Name of a public IP address SKU. - Basic or Standard"
+            }
+        },
+        "DiskSku": {
+            "type": "string",
+            "defaultValue": "Premium_LRS",
+            "metadata": {
+                "description": "The disk SKU value"
+            }
+        },
+        "DiskSizeGb": {
+            "type": "int",
+            "metadata": {
+                "description": "The size of the OS Disk"
+            }
+        },
+        "sourceResourceId": {
+            "type": "string",
+            "metadata": {
+                "description": "The source from where to create a disk. ResourceId needed"
+            }
+        },
+        "createOption": {
+            "type": "string",
+            "defaultValue": "Copy"
+        },
+        "tags": {
+            "type": "object",
+            "defaultValue": {
+            }
+        }
+    },
+    "variables": {
+        "networkinterfaceName": "[concat(parameters('virtualMachineName'),'-nic')]",
+        "publicIPAddressName": "[concat(parameters('virtualMachineName'), '-pip')]",
+        "OsDiskName": "[concat(parameters('virtualMachineName'), '-os')]"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Network/publicIPAddresses",
+            "name": "[variables('publicIPAddressName')]",
+            "tags": "[parameters('tags')]",
+            "apiVersion": "2020-07-01",
+            "location": "[resourceGroup().location]",
+            "sku": {
+                "name": "[parameters('PublicIpSku')]"
+            },
+            "properties": {
+                "publicIPAllocationMethod": "[parameters('PublicIpAllocationMethod')]"
+            }
+        },
+        {
+            "type": "Microsoft.Network/networkInterfaces",
+            "name": "[variables('networkinterfaceName')]",
+            "tags": "[parameters('tags')]",
+            "apiVersion": "2020-07-01",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig1",
+                        "properties": {
+                            "privateIPAllocationMethod": "Dynamic",
+                            "publicIPAddress": {
+                                "id": "[resourceId('Microsoft.Network/publicIPAddresses',variables('publicIPAddressName'))]"
+                            },
+                            "subnet": {
+                                "id": "[parameters('subnetRef')]"
+                            }
+                        }
+                    }
+                ]
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName'))]"
+            ]
+        },
+        {
+            "apiVersion": "2020-09-30",
+            "type": "Microsoft.Compute/disks",
+            "name": "[variables('OsDiskName')]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "creationData": {
+                    "createOption": "[parameters('createOption')]",
+                    "sourceResourceId": "[parameters('sourceResourceId')]"
+                },
+                "diskSizeGB": "[parameters('DiskSizeGb')]"
+            },
+            "sku": {
+                "name": "[parameters('DiskSku')]"
+            },
+            "tags": {}
+        },
+        {
+            "type": "Microsoft.Compute/virtualMachines",
+            "name": "[parameters('virtualMachineName')]",
+            "tags": "[parameters('tags')]",
+            "apiVersion": "2020-06-01",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "hardwareProfile": {
+                    "vmSize": "[parameters('virtualMachineSize')]"
+                },
+                "storageProfile": {
+                    "osDisk": {
+                        "osType": "Windows",
+                        "createOption": "Attach",
+                        "managedDisk": {
+                            "id": "[resourceId('Microsoft.Compute/disks/', variables('OsDiskName'))]"
+                        }
+                    }
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces',variables('networkinterfaceName'))]"
+                        }
+                    ]
+                }
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/networkInterfaces/', variables('networkinterfaceName'))]"
+            ]
+        }
+    ],
+    "outputs": {
+        "PublicIp": {
+            "type": "string",
+            "value": "[resourceId('Microsoft.Network/publicIPAddresses',variables('publicIPAddressName'))]"
+        },
+        "virtualMachineName": {
+            "type": "string",
+            "value": "[parameters('virtualMachineName')]"
+        },
+        "ResourceGroup": {
+            "type": "string",
+            "value": "[resourceGroup().name]"
+        }
+    }
+}

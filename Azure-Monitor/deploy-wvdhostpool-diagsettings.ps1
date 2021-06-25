@@ -29,7 +29,7 @@ $Parameters = @{
     ResourceId = $Hostpool.id
     WorkspaceId = $Workspace.ResourceId
     Enabled = $true
-    Category = "Checkpoint,Error,Management,Connection,HostRegistration"
+    Category = @("Checkpoint","Error","Management","Connection","HostRegistration")
 }
 
 Set-AzDiagnosticSetting -Name WVD-Diagnostics @parameters
